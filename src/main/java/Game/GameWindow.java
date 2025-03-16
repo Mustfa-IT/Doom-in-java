@@ -7,7 +7,7 @@ import java.awt.image.BufferStrategy;
 public class GameWindow extends JFrame {
     private Canvas canvas;
     private BufferStrategy bufferStrategy;
-
+    private InputManager inputManager;
     public void initialize() {
         setTitle("Game");
         setDefaultCloseOperation(EXIT_ON_CLOSE);
@@ -22,7 +22,15 @@ public class GameWindow extends JFrame {
         setLocationRelativeTo(null);
         setVisible(true);
 
-        canvas.createBufferStrategy(2);
+        //Add the Input manager
+        this.inputManager = new InputManager(canvas);
+
+        // Always create on visible component
+        canvas.createBufferStrategy(3);
+        // Wait for strategy to be ready
+        while (canvas.getBufferStrategy() == null) {
+            Thread.yield();
+        }
         bufferStrategy = canvas.getBufferStrategy();
     }
 
@@ -39,10 +47,13 @@ public class GameWindow extends JFrame {
     }
 
     public void dispose() {
-        SwingUtilities.invokeLater(() -> super.dispose());
+        SwingUtilities.invokeLater(super::dispose);
     }
 
     public void processInput() {
-        // Implement input handling here
+        inputManager.update();
+    }
+    public InputManager getInputManager() {
+        return inputManager;
     }
 }

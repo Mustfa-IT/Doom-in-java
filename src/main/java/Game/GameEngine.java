@@ -1,11 +1,20 @@
 package Game;
 
+import Systems.TestInputManagerSystem;
+
 import java.awt.*;
 import java.awt.image.BufferStrategy;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Game implements Runnable {
+public class GameEngine implements Runnable {
+    /**
+     * Immutable container for core game references
+     * @param gameEngine Main game instance
+     * @param gameWindow Game window component
+     */
+    record GameContext(GameEngine gameEngine, GameWindow gameWindow) {}
+
     private GameWindow gameWindow;
     private double dt;
     private final List<GameSystem> systems;
@@ -14,7 +23,7 @@ public class Game implements Runnable {
     private final int TARGET_FPS = 60;
     private final long TARGET_FRAME_TIME_NANOS = 1_000_000_000 / TARGET_FPS;
 
-    public Game() {
+    public GameEngine() {
         systems = new ArrayList<>();
         running = false;
     }
@@ -23,8 +32,17 @@ public class Game implements Runnable {
         running = true;
         gameWindow = new GameWindow();
         gameWindow.initialize();
+
+        initSystems();
+
+
         gameThread = new Thread(this);
         gameThread.start();
+    }
+
+    private void initSystems() {
+        TestInputManagerSystem test = new TestInputManagerSystem();
+        addSystem(test);
     }
 
     public void stop() {
@@ -42,7 +60,7 @@ public class Game implements Runnable {
     @Override
     public void run() {
         long previousTime = System.nanoTime();
-        while (running) {
+        while (isRunning()) {
             long currentTime = System.nanoTime();
             dt = (currentTime - previousTime) / 1_000_000_000.0;
             previousTime = currentTime;
@@ -92,14 +110,15 @@ public class Game implements Runnable {
 
         do {
             do {
-                Graphics graphics = strategy.getDrawGraphics();
+                Graphics g = strategy.getDrawGraphics();
                 try {
-                    clearScreen(graphics);
-                    systems.forEach(system -> system.render(graphics));
+                    clearScreen(g);
+                    systems.forEach(system -> system.render(g));
                 } finally {
-                    graphics.dispose();
+                    g.dispose();
                 }
             } while (strategy.contentsRestored());
+
             strategy.show();
         } while (strategy.contentsLost());
     }
@@ -135,6 +154,9 @@ public class Game implements Runnable {
     public void addSystem(GameSystem system) {
         if (system != null && !systems.contains(system)) {
             systems.add(system);
+            if (system instanceof BaseGameSystem) {
+                ((BaseGameSystem) system).initializeContext(new GameContext(this,gameWindow));
+            }
         }
     }
 
@@ -146,5 +168,8 @@ public class Game implements Runnable {
 
     public boolean isRunning() {
         return running;
+    }
+    public double getDeltaTime(){
+        return dt;
     }
 }

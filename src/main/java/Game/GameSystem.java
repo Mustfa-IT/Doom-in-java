@@ -7,3 +7,4 @@ public interface GameSystem {
     void render(Graphics graphics);
     void cleanUp();
 }
+

@@ -1,16 +1,11 @@
-import Game.Game;
-
-import javax.swing.*;
+import Game.GameEngine;
 
 public class Main {
     public static void main(String[] args) {
-        Game game = new Game();
-        game.start();
+        System.setProperty("sun.awt.noerasebackground", "true");
+        System.setProperty("sun.java2d.opengl", "true");  // For OpenGL pipeline
 
-        new Timer(5000, e -> {
-            game.stop();
-            ((Timer) e.getSource()).stop();
-        }).start();
-
+        GameEngine gameEngine = new GameEngine();
+        gameEngine.start();
     }
 }
